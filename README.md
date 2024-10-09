@@ -15,4 +15,4 @@ Ce projet est un jeu de Hex développé en JavaScript, utilisant D3.js pour le r
 
 1. Clonez ce dépôt sur votre machine locale :
    ```bash
-   git clone https://github.com/votre-utilisateur/hex-game.git
+   git clone https://github.com/hydre-lapin/hex-game.git
