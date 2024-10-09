@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="hexagones_squelette.js"></script>
+  <script>
+    // Connexion au serveur Socket.IO
+    var socket = io();
+
+    // Variables globales
+    var players = [];
+    var playerNumber = 0;
+    var nbrhexcolor = 0;
+    var isTurn = false;
+
+    // Fonctions
+    function joinGame() {
+      var playerName = document.getElementById('playerName').value.trim();
+      var errorMessage = document.getElementById('errorMessage');
+
+      if (playerName === '') {
+        errorMessage.textContent = "Le nom ne peut pas être vide.";
+        errorMessage.style.display = 'block';
+        return;
+      } else if (players.includes(playerName)) {
+        errorMessage.textContent = "Ce nom est déjà utilisé.";
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      errorMessage.style.display = 'none';
+
+      socket.emit('join', playerName);
+
+      // Afficher les éléments de l'interface utilisateur
+      document.getElementById('joinButton').disabled = true;
+      document.getElementById('leaveButton').disabled = false;
+      document.getElementById('chatContainer').style.display = 'block';
+      document.getElementById('messageContainer').style.display = 'block';
+      document.getElementById('joinButton').style.display = 'none';
+      document.getElementById('playerInfo').style.display = 'block';
+      document.getElementById('tablier').style.display = 'block';
+      document.getElementById('ResetParty').style.display = 'block';
+      document.getElementById('turnInfo').style.display = 'block';
+      document.getElementById('playerName').setAttribute('readonly', true);
+    }
+
+    function leaveGame() {
+      var playerName = document.getElementById('playerName').value;
+      socket.emit('leave', playerName);
+
+      // Afficher les éléments de l'interface utilisateur
+      document.getElementById('joinButton').disabled = false;
+      document.getElementById('leaveButton').disabled = true;
+      document.getElementById('chatContainer').style.display = 'none';
+      document.getElementById('messageContainer').style.display = 'none';
+      document.getElementById('joinButton').style.display = 'block';
+      document.getElementById('playerInfo').style.display = 'none';
+      document.getElementById('tablier').style.display = 'none';
+      document.getElementById('ResetParty').style.display = 'none';
+      document.getElementById('turnInfo').style.display = 'none';
+      document.getElementById('playerName').removeAttribute('readonly');
+    }
+
+    function sendMessage() {
+      var playerName = document.getElementById('playerName').value;
+      var message = document.getElementById('message').value;
+      socket.emit('message', { playerName, message });
+      document.getElementById('message').value = '';
+    }
+
+    function ResetGameBoard() {
+      socket.emit('ResetParty');
+    }
+
+    socket.on('players', newPlayers => {
+      players = newPlayers;
+      var playerList = document.getElementById('playerList');
+    });
+
+    socket.on('message', data => {
+      var chat = document.getElementById('chat');
+      var messageItem = document.createElement('li');
+      messageItem.textContent = `${data.playerName} [${data.time}]: ${data.message}`;
+      if (data.playerName === 'Système') {
+        messageItem.classList.add(data.type === 'connection' ? 'connection-message' : 'system-message');
+      }
+      chat.appendChild(messageItem);
+    });
+
+    socket.on('colorHex', data => {
+      // Colorie les hexagones en fonction du joueur
+      for (let num = nbrhexcolor; num < data.hexagones.length; num++) {
+        d3.select(`#h${data.hexagones[num]['hexagones']}`).attr('fill', data.hexagones[num]['joueur'] === 1 ? "blue" : "red");
+      }
+
+      // Met à jour le nombre d'hexagones colorés
+      nbrhexcolor = data.hexagones.length;
+    });
+
+    socket.on('gameFull', data => {
+      // Afficher un message d'erreur si la partie est pleine
+      var errorMessage = document.getElementById('errorMessage');
+      errorMessage.textContent = data.message;
+      errorMessage.style.display = 'block';
+    });
+
+    socket.on('playerNumber', number => {
+      playerNumber = number;
+      document.getElementById('playerInfo').textContent = `Vous êtes le joueur ${playerNumber}`;
+    });
+
+    socket.on('ResetParty', data => {
+      // Réinitialise le nombre d'hexagones colorés
+      nbrhexcolor = 0;
+
+      // Recolorie tous les hexagones en blanc
+      d3.selectAll('path').attr('fill', "white");
+
+      console.log('La partie a été réinitialisée et les hexagones sont recoloriés.');
+    });
+
+
+    socket.on('yourTurn', data => {
+      // Mettre à jour la variable isTurn
+      isTurn = data.isTurn;
+      console.log(data.message);
+
+      // Afficher un message indiquant que c'est le tour du joueur
+      document.getElementById('turnInfo').textContent = data.message;
+    });
+
+    socket.on('waitTurn', data => {
+      // Mettre à jour la variable isTurn
+      isTurn = data.isTurn;
+      console.log(data.message);
+
+      // Afficher un message indiquant que c'est le tour du joueur
+      document.getElementById('turnInfo').textContent = data.message;
+    });
+
+    // Attendre que le DOM soit chargé pour ajouter les événements
+    window.addEventListener('load', () => { 
+      document.getElementById('playerInfo').style.display = 'none';
+      document.getElementById('joinButton').addEventListener('click', joinGame);
+      document.getElementById('leaveButton').addEventListener('click', leaveGame);
+      document.getElementById('ResetParty').addEventListener('click', ResetGameBoard);
+      document.getElementById('sendButton').addEventListener('click', sendMessage);
+      document.getElementById('leaveButton').disabled = true;
+      document.getElementById('ResetParty').style.display = 'none';
+      document.getElementById('chatContainer').style.display = 'none';
+      document.getElementById('turnInfo').style.display = 'none';
+      document.getElementById('messageContainer').style.display = 'none';
+      document.getElementById('tablier').style.display = 'none';
+
+      // Générer le damier hexagonal
+      genereDamier(30, 11, 11);
+
+      // Désactiver le bouton d'envoi du message si le champ de message est vide
+      const messageInput = document.getElementById('message');
+      const sendButton = document.getElementById('sendButton');
+      sendButton.disabled = true;
+
+      // Activer le bouton d'envoi du message si le champ de message n'est pas vide
+      messageInput.addEventListener('input', () => {
+        sendButton.disabled = messageInput.value.trim() === '';
+      });
+
+      // Envoyer le message si la touche Entrée est enfoncée
+      messageInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+    });
+
+  </script>
+</head>
+
+<body>
+  <div id="tablier"></div>
+  <div id="playerInfo">
+    <span id="playerCount"></span>
+    <span id="playerList"></span>
+  </div>
+  <div id="ConnexionButton">
+    <input type="text" id="playerName" placeholder="Entrez votre nom">
+    <button id="joinButton">Rejoindre la partie</button>
+    <button id="leaveButton">Quitter la partie</button>
+  </div>
+  <div id="eventjeu">
+    <button id="ResetParty">Reset</button>
+  </div>
+  <div id="turnInfo">
+    C'est au tour du joueur...
+  </div>
+  <div id="chatContainer">
+    <ul id="chat"></ul>
+  </div>
+  <div id="messageContainer">
+    <input type="text" id="message" placeholder="Entrez votre message">
+    <br/>
+    <button id="sendButton">Envoyer</button>
+  </div>
+  <div id="errorMessage"></div>
+</body>
+</html>

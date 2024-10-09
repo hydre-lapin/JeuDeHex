@@ -1,0 +1,163 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f8ff;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    justify-content: baseline;
+    height: 100vh;
+    margin: 0;
+    padding: 10px;
+}
+
+#playerInfo {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    white-space: normal;
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+#ConnexionButton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+#ConnexionButton button {
+    width: auto;
+    margin-left: 10px;
+}
+
+#ConnexionButton input {
+    width: 70%;
+    max-width: 400px;
+    margin-bottom: 10px;
+}
+
+#playerList {
+    margin-right: 20px;
+}
+
+#chat {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+#chatContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    border: 2px solid #4caf50;
+    border-radius: 10px;
+    padding: 10px;
+    width: 28%;
+    height: 75%;
+    overflow-y: scroll;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    position: absolute;
+    right: 10px;
+    top: 10%;
+}
+
+#messageContainer {
+    width: 28%;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    position: absolute;
+    right: 10px;
+    top: calc(20px + 75% + 30px);
+}
+
+
+#messageContainer input[type="text"],
+#messageContainer button {
+    width: 100%;
+    max-width: none;
+}
+
+input[type="text"], button {
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #4caf50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+.system-message {
+    color: red;
+    font-style: italic;
+}
+
+.connection-message {
+    color: green;
+    font-weight: bold;
+}
+
+.top-container {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+svg {
+    border: 4px solid red;
+    border-top-color: blue;
+    border-bottom-color: blue;
+    position: absolute;
+    top: 15%;
+    left: 15%;
+}
+
+#eventjeu {
+    align-items: start;
+    display: flex;
+    width: 5%;
+}
+
+#turnInfo {
+    font-size: 18px;
+    color: green;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+#errorMessage {
+    color: red;
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
