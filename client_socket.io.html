@@ -14,12 +14,14 @@
     var playerNumber = 0;
     var nbrhexcolor = 0;
     var isTurn = false;
+    var StartInput = true;
 
     // Fonctions
     function joinGame() {
       var playerName = document.getElementById('playerName').value.trim();
       var errorMessage = document.getElementById('errorMessage');
 
+      // Vérifier si le nom du joueur est valide
       if (playerName === '') {
         errorMessage.textContent = "Le nom ne peut pas être vide.";
         errorMessage.style.display = 'block';
@@ -30,7 +32,9 @@
         return;
       }
 
+      // Cacher le message d'erreur
       errorMessage.style.display = 'none';
+      StartInput = false;
 
       socket.emit('join', playerName);
 
@@ -42,7 +46,6 @@
       document.getElementById('joinButton').style.display = 'none';
       document.getElementById('playerInfo').style.display = 'block';
       document.getElementById('tablier').style.display = 'block';
-      document.getElementById('ResetParty').style.display = 'block';
       document.getElementById('turnInfo').style.display = 'block';
       document.getElementById('playerName').setAttribute('readonly', true);
     }
@@ -50,6 +53,7 @@
     function leaveGame() {
       var playerName = document.getElementById('playerName').value;
       socket.emit('leave', playerName);
+      StartInput = true;
 
       // Afficher les éléments de l'interface utilisateur
       document.getElementById('joinButton').disabled = false;
@@ -72,7 +76,8 @@
     }
 
     function ResetGameBoard() {
-      socket.emit('ResetParty');
+      var playerName = document.getElementById('playerName').value;
+      socket.emit('ResetParty', { Name: playerName });
     }
 
     socket.on('players', newPlayers => {
@@ -88,6 +93,9 @@
         messageItem.classList.add(data.type === 'connection' ? 'connection-message' : 'system-message');
       }
       chat.appendChild(messageItem);
+
+      // Faire défiler le chat vers le bas
+      chat.scrollTop = chat.scrollHeight;
     });
 
     socket.on('colorHex', data => {
@@ -112,16 +120,29 @@
       document.getElementById('playerInfo').textContent = `Vous êtes le joueur ${playerNumber}`;
     });
 
-    socket.on('ResetParty', data => {
-      // Réinitialise le nombre d'hexagones colorés
-      nbrhexcolor = 0;
+    socket.on('win', data => {
+      // Activer le bouton de réinitialisation de la partie
+      document.getElementById('ResetParty').style.display = 'block';
 
-      // Recolorie tous les hexagones en blanc
+      // Afficher un message de victoire
+      var messagewin = document.getElementById('winMessage');
+      messagewin.textContent = data.message;
+      messagewin.style.display = 'block';
+      window.alert(messagewin.textContent);
+      isTurn = false;
+    });
+
+    socket.on('ResetParty', data => {
+      // Réinitialisation de l'affichage des hexagones
+      nbrhexcolor = 0;
       d3.selectAll('path').attr('fill', "white");
+
+      // Suppression du message de victoire si présent
+      const winMessage = document.getElementById('winMessage');
+      winMessage.style.display = 'none';
 
       console.log('La partie a été réinitialisée et les hexagones sont recoloriés.');
     });
-
 
     socket.on('yourTurn', data => {
       // Mettre à jour la variable isTurn
@@ -152,6 +173,7 @@
       document.getElementById('ResetParty').style.display = 'none';
       document.getElementById('chatContainer').style.display = 'none';
       document.getElementById('turnInfo').style.display = 'none';
+      document.getElementById('winMessage').style.display = 'none';
       document.getElementById('messageContainer').style.display = 'none';
       document.getElementById('tablier').style.display = 'none';
 
@@ -161,11 +183,21 @@
       // Désactiver le bouton d'envoi du message si le champ de message est vide
       const messageInput = document.getElementById('message');
       const sendButton = document.getElementById('sendButton');
+      const PseudoInput = document.getElementById('playerName');
       sendButton.disabled = true;
 
       // Activer le bouton d'envoi du message si le champ de message n'est pas vide
       messageInput.addEventListener('input', () => {
         sendButton.disabled = messageInput.value.trim() === '';
+      });
+
+      // Commencer la partie si la touche Entrée est enfoncée
+      PseudoInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter' && StartInput) {
+          event.preventDefault();
+          joinGame();
+          StartInput = false;
+        }
       });
 
       // Envoyer le message si la touche Entrée est enfoncée
@@ -186,25 +218,40 @@
     <span id="playerCount"></span>
     <span id="playerList"></span>
   </div>
+
   <div id="ConnexionButton">
     <input type="text" id="playerName" placeholder="Entrez votre nom">
     <button id="joinButton">Rejoindre la partie</button>
     <button id="leaveButton">Quitter la partie</button>
   </div>
+
   <div id="eventjeu">
     <button id="ResetParty">Reset</button>
   </div>
+
+  <div id="winMessage">
+    ????
+  </div>
+
   <div id="turnInfo">
     C'est au tour du joueur...
   </div>
+
   <div id="chatContainer">
     <ul id="chat"></ul>
   </div>
+
   <div id="messageContainer">
     <input type="text" id="message" placeholder="Entrez votre message">
     <br/>
     <button id="sendButton">Envoyer</button>
   </div>
+
   <div id="errorMessage"></div>
+
+  <footer class="audio-container">
+    <audio controls src="Jeux Hex.mp3"></audio>
+  </footer>
+
 </body>
 </html>

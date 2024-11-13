@@ -1,0 +1,1 @@
+io.emit('message', { playerName: 'Système', message: `${data.Name} a reset la partie`, time: new Date().toLocaleTimeString() });

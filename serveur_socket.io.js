@@ -1,4 +1,5 @@
 const express = require('express');
+const UnionFind = require('./UnionFind');
 const app = express();
 const http = require('http');
 const server = http.createServer(app);
@@ -9,6 +10,12 @@ server.listen(8888, () => { console.log('Le serveur écoute sur le port 8888'); 
 let players = [];
 let currentTurn = 1;  // Variable pour suivre à qui c'est le tour
 let hexjouer = [];
+const boardSize = 11;
+let uf = new UnionFind(boardSize * boardSize + 4);
+let LEFT_BORDER = boardSize * boardSize;
+let RIGHT_BORDER = boardSize * boardSize + 1;
+let TOP_BORDER = boardSize * boardSize + 2;
+let BOTTOM_BORDER = boardSize * boardSize + 3;
 
 app.get('/', (request, response) => {
     response.sendFile('client_socket.io.html', {root: __dirname});
@@ -46,7 +53,7 @@ io.on('connection', (socket) => {
             socket.emit('waitTurn', { message: 'Attendez votre tour', isTurn: false });
 
             // Informer le joueur 1 que c'est toujours son tour
-            const player1Socket = players.find(player => playerNumber === 1);
+            const player1Socket = players[0];
             if (player1Socket) {
                 io.to(player1Socket.id).emit('yourTurn', { message: 'C\'est votre tour', isTurn: true });
             }
@@ -58,29 +65,34 @@ io.on('connection', (socket) => {
         if (data.joueur === currentTurn) {
             console.log(`Le joueur ${data.joueur} a sélectionné l'hexagone numéro ${data.hexagone}`);
             hexjouer.push({ hexagones: data.hexagone, joueur: data.joueur });
-
+    
             // Informer tous les joueurs de la sélection
             io.emit('colorHex', { hexagones: hexjouer });
-
+    
+            // Connecter les hexagones et vérifier la victoire
+            if (connectHexagones(data.hexagone, data.joueur)) {
+                io.emit('win', { message: `Le joueur ${data.joueur} a gagné !` });
+                console.log(`Le joueur ${data.joueur} a gagné !`);
+                io.emit('message', { playerName: 'Système', message: `${data.joueur} a reset la partie`, time: new Date().toLocaleTimeString() });
+                return;
+            }
+    
             // Passage au joueur suivant
             currentTurn = currentTurn === 1 ? 2 : 1;
             console.log(`C'est au tour du joueur ${currentTurn}`);
-
+    
             // Informer le joueur dont c'est le tour qu'il peut jouer
             const playerNext = players.find(player => players.indexOf(player) + 1 === currentTurn);
             const playerWaiting = players.find(player => players.indexOf(player) + 1 !== currentTurn);
-
-            // Envoyer l'événement de tour
+    
             if (playerNext) {
                 io.to(playerNext.id).emit('yourTurn', { message: 'C\'est votre tour', isTurn: true });
             }
-
-            // Informer le joueur qui doit attendre
+    
             if (playerWaiting) {
                 io.to(playerWaiting.id).emit('waitTurn', { message: 'Attendez votre tour', isTurn: false });
             }
         } else {
-            // Si ce n'est pas le tour du joueur, envoyer un message pour lui dire d'attendre
             socket.emit('waitTurn', { message: 'Ce n\'est pas votre tour', isTurn: false });
             console.log(`Le joueur ${data.joueur} a essayé de jouer hors de son tour.`);
         }
@@ -100,8 +112,13 @@ io.on('connection', (socket) => {
             io.emit('players', players.map(player => player.name));
             io.emit('message', { playerName: 'Système', message: `${currentPlayer} s'est déconnecté`, time: new Date().toLocaleTimeString() });
             console.log(`${currentPlayer} s'est déconnecté`);
+    
+            // Réinitialiser le jeu si un joueur quitte
+            currentTurn = 1;
+            hexjouer = [];
+            io.emit('ResetParty', { hexagones: hexjouer });
         }
-    });
+    });    
 
     // Gestion des tours de jeu
     socket.on('endTurn', () => {
@@ -131,10 +148,13 @@ io.on('connection', (socket) => {
     
         // Informer tous les joueurs que la partie est réinitialisée
         io.emit('ResetParty', { hexagones: hexjouer });
+
+        // Informer tout les joueurs par le chat
+        io.emit('message', { playerName: 'Système', message: `${data.Name} a reset la partie`, time: new Date().toLocaleTimeString() });
         
         // Informer le premier joueur que c'est à lui de jouer
-        const firstPlayerSocket = players[0];  // Le premier joueur de la liste
-        const secondPlayerSocket = players[1]; // Le second joueur de la liste (s'il existe)
+        const firstPlayerSocket = players[0];
+        const secondPlayerSocket = players[1];
     
         if (firstPlayerSocket) {
             io.to(firstPlayerSocket.id).emit('yourTurn', { message: 'C\'est votre tour', isTurn: true });
@@ -144,8 +164,54 @@ io.on('connection', (socket) => {
         if (secondPlayerSocket) {
             io.to(secondPlayerSocket.id).emit('waitTurn', { message: 'Attendez votre tour', isTurn: false });
         }
-    
+
+        // Réinitialiser la structure de données Union-Find
+        uf = new UnionFind(boardSize * boardSize + 4);
+        LEFT_BORDER = boardSize * boardSize;
+        RIGHT_BORDER = boardSize * boardSize + 1;
+        TOP_BORDER = boardSize * boardSize + 2;
+        BOTTOM_BORDER = boardSize * boardSize + 3;        
+
         console.log('La partie a été réinitialisée. C\'est au tour du joueur 1.');
     });
+
+    // Fonction pour connecter l'hexagone et ses voisins si possible
+    function connectHexagones(hex, player) {
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1], [-1, 1], [1, -1]
+        ];
+
+        const row = Math.floor(hex / boardSize);
+        const col = hex % boardSize;
+
+        directions.forEach(([dx, dy]) => {
+            const newRow = row + dx;
+            const newCol = col + dy;
+            if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
+                const neighborIndex = newRow * boardSize + newCol;
+                if (hexjouer.some(h => h.hexagones === neighborIndex && h.joueur === player)) {
+                    uf.union(hex, neighborIndex);
+                }
+            }
+        });
+
+        // Connecter aux bords virtuels
+        if (player === 1) {
+            if (col === 0) uf.union(hex, LEFT_BORDER);
+            if (col === boardSize - 1) uf.union(hex, RIGHT_BORDER);
+        } else if (player === 2) {
+            if (row === 0) uf.union(hex, TOP_BORDER);
+            if (row === boardSize - 1) uf.union(hex, BOTTOM_BORDER);
+        }
+
+        // Vérifier si le joueur a gagné
+        if (player === 1 && uf.find(LEFT_BORDER) === uf.find(RIGHT_BORDER)) {
+            return true;
+        } else if (player === 2 && uf.find(TOP_BORDER) === uf.find(BOTTOM_BORDER)) {
+            return true;
+        }
+
+        return false;
+    }
     
 });
