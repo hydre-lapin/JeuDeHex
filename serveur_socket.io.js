@@ -8,6 +8,7 @@ app.use(express.static(__dirname));
 server.listen(8888, () => { console.log('Le serveur écoute sur le port 8888'); });
 
 let players = [];
+let spectators = [];
 let currentTurn = 1;  // Variable pour suivre à qui c'est le tour
 let hexjouer = [];
 const boardSize = 11;
@@ -24,12 +25,16 @@ app.get('/', (request, response) => {
 io.on('connection', (socket) => {
     let currentPlayer = '';
     let playerNumber = 0;
+    let isSpectator = false;
 
     // Lorsqu'un joueur rejoint la partie
     socket.on('join', playerName => {
         if (players.length >= 2) {
-            socket.emit('gameFull', { message: 'La partie est pleine. Veuillez réessayer plus tard.' });
-            console.log(`${playerName} a essayé de rejoindre, mais la partie est pleine.`);
+            // Ajouter le joueur comme spectateur
+            spectators.push({ name: playerName, id: socket.id });
+            isSpectator = true;
+            socket.emit('gameFull', { message: 'Vous êtes spectateur car la partie est pleine.' });
+            console.log(`${playerName} a rejoint en tant que spectateur.`);
             return;
         }
 
@@ -62,6 +67,9 @@ io.on('connection', (socket) => {
 
     // Réception de l'événement de sélection d'hexagone
     socket.on('hexagoneSelectionne', data => {
+        if (isSpectator) {
+            return;
+        }
         if (data.joueur === currentTurn) {
             console.log(`Le joueur ${data.joueur} a sélectionné l'hexagone numéro ${data.hexagone}`);
             hexjouer.push({ hexagones: data.hexagone, joueur: data.joueur });

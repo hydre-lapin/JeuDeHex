@@ -15,6 +15,8 @@
     var nbrhexcolor = 0;
     var isTurn = false;
     var StartInput = true;
+    var hexagones = {};
+    var onLive = true;
 
     // Fonctions
     function joinGame() {
@@ -48,6 +50,7 @@
       document.getElementById('tablier').style.display = 'block';
       document.getElementById('turnInfo').style.display = 'block';
       document.getElementById('playerName').setAttribute('readonly', true);
+      document.getElementById('specButton').style.display = 'none';
     }
 
     function leaveGame() {
@@ -99,20 +102,33 @@
     });
 
     socket.on('colorHex', data => {
-      // Colorie les hexagones en fonction du joueur
-      for (let num = nbrhexcolor; num < data.hexagones.length; num++) {
-        d3.select(`#h${data.hexagones[num]['hexagones']}`).attr('fill', data.hexagones[num]['joueur'] === 1 ? "blue" : "red");
-      }
+      if (onLive) {
+        // Colorie les hexagones en fonction du joueur
+        for (let num = nbrhexcolor; num < data.hexagones.length; num++) {
+          d3.select(`#h${data.hexagones[num]['hexagones']}`).attr('fill', data.hexagones[num]['joueur'] === 1 ? "blue" : "red");
+        }
 
-      // Met à jour le nombre d'hexagones colorés
-      nbrhexcolor = data.hexagones.length;
+        // Met à jour le nombre d'hexagones colorés
+        nbrhexcolor = data.hexagones.length;
+        coupSound.play();
+      }
+      hexagones = data.hexagones;
     });
 
     socket.on('gameFull', data => {
-      // Afficher un message d'erreur si la partie est pleine
       var errorMessage = document.getElementById('errorMessage');
       errorMessage.textContent = data.message;
       errorMessage.style.display = 'block';
+
+      // Désactiver les éléments interactifs
+      document.getElementById('joinButton').disabled = true;
+      document.getElementById('ResetParty').style.display = 'none';
+      document.getElementById('messageContainer').style.display = 'none';
+      document.getElementById('turnInfo').textContent = 'Vous êtes spectateur.';
+      document.getElementById('playerInfo').textContent = '👁️';
+      document.getElementById('specButton').style.display = 'block';
+      document.getElementById('comebackS').disabled = false;
+      document.getElementById('movefowardS').disabled = false;
     });
 
     socket.on('playerNumber', number => {
@@ -130,6 +146,7 @@
       messagewin.style.display = 'block';
       window.alert(messagewin.textContent);
       isTurn = false;
+      FinSound.play();
     });
 
     socket.on('ResetParty', data => {
@@ -162,6 +179,36 @@
       document.getElementById('turnInfo').textContent = data.message;
     });
 
+    function goBack() {
+      if (nbrhexcolor > 0) {
+        if (nbrhexcolor === hexagones.length) {
+          document.getElementById('movefowardS').disabled = false;
+        }
+        d3.select(`#h${hexagones[nbrhexcolor-1]['hexagones']}`).attr('fill', "white");
+        nbrhexcolor--;
+        if (nbrhexcolor === 0) {
+          document.getElementById('comebackS').disabled = true;
+        }
+        onLive = false;
+        document.getElementById('infoSpec').style.display = 'none';
+      }
+    }
+
+    function goForward() {
+      if (nbrhexcolor < hexagones.length) {
+        if (nbrhexcolor === 0) {
+          document.getElementById('comebackS').disabled = false;
+        }
+        nbrhexcolor++;
+        d3.select(`#h${hexagones[nbrhexcolor-1]['hexagones']}`).attr('fill', hexagones[nbrhexcolor-1]['joueur'] === 1 ? "blue" : "red");
+        if (nbrhexcolor === hexagones.length) {
+          document.getElementById('movefowardS').disabled = true;
+          onLive = true;
+          document.getElementById('infoSpec').style.display = 'block';
+        }
+      }
+    }
+
     // Attendre que le DOM soit chargé pour ajouter les événements
     window.addEventListener('load', () => { 
       document.getElementById('playerInfo').style.display = 'none';
@@ -176,6 +223,11 @@
       document.getElementById('winMessage').style.display = 'none';
       document.getElementById('messageContainer').style.display = 'none';
       document.getElementById('tablier').style.display = 'none';
+      document.getElementById('specButton').style.display = 'none';
+      document.getElementById('comebackS').disabled = true;
+      document.getElementById('movefowardS').disabled = true;
+      document.getElementById('comebackS').addEventListener('click', goBack);
+      document.getElementById('movefowardS').addEventListener('click', goForward);
 
       // Générer le damier hexagonal
       genereDamier(30, 11, 11);
@@ -248,6 +300,14 @@
   </div>
 
   <div id="errorMessage"></div>
+  <div id="specButton">
+    <button id="comebackS">◀</button>
+    <button id="movefowardS">▶</button>
+    <div id="infoSpec">🔴 𝐋𝐢𝐯𝐞</div>
+  </div>
+
+  <audio id="coupSound" src="coup.mp3" hidden></audio>
+  <audio id="FinSound" src="win.wav" hidden></audio>
 
   <footer class="audio-container">
     <audio controls src="Jeux Hex.mp3" class="audio-player"></audio>
