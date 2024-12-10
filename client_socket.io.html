@@ -120,6 +120,11 @@
       errorMessage.textContent = data.message;
       errorMessage.style.display = 'block';
 
+      // Masquer le message après 3 secondes
+      setTimeout(() => {
+        errorMessage.style.display = 'none';
+      }, 3000);
+
       // Désactiver les éléments interactifs
       document.getElementById('joinButton').disabled = true;
       document.getElementById('ResetParty').style.display = 'none';
@@ -128,7 +133,7 @@
       document.getElementById('playerInfo').textContent = '👁️';
       document.getElementById('specButton').style.display = 'block';
       document.getElementById('comebackS').disabled = false;
-      document.getElementById('movefowardS').disabled = false;
+      document.getElementById('movefowardS').disabled = true;
     });
 
     socket.on('playerNumber', number => {
@@ -137,6 +142,9 @@
     });
 
     socket.on('win', data => {
+      // Jouer un son de victoire
+      FinSound.play();
+
       // Activer le bouton de réinitialisation de la partie
       document.getElementById('ResetParty').style.display = 'block';
 
@@ -146,7 +154,6 @@
       messagewin.style.display = 'block';
       window.alert(messagewin.textContent);
       isTurn = false;
-      FinSound.play();
     });
 
     socket.on('ResetParty', data => {
@@ -180,28 +187,40 @@
     });
 
     function goBack() {
+      // Retourner en arrière dans la partie
       if (nbrhexcolor > 0) {
         if (nbrhexcolor === hexagones.length) {
+          // Désactiver le bouton de lecture en avant
           document.getElementById('movefowardS').disabled = false;
         }
+        // Colorie l'hexagone en blanc
         d3.select(`#h${hexagones[nbrhexcolor-1]['hexagones']}`).attr('fill', "white");
         nbrhexcolor--;
+
+        // Désactiver le bouton de retour en arrière si on est au début de la partie
         if (nbrhexcolor === 0) {
           document.getElementById('comebackS').disabled = true;
         }
+
+        // Mettre à jour la variable onLive
         onLive = false;
         document.getElementById('infoSpec').style.display = 'none';
       }
     }
 
     function goForward() {
+      // Avancer dans la partie
       if (nbrhexcolor < hexagones.length) {
         if (nbrhexcolor === 0) {
+          // Désactiver le bouton de retour en arrière
           document.getElementById('comebackS').disabled = false;
         }
+        // Colorie l'hexagone en fonction du joueur
         nbrhexcolor++;
         d3.select(`#h${hexagones[nbrhexcolor-1]['hexagones']}`).attr('fill', hexagones[nbrhexcolor-1]['joueur'] === 1 ? "blue" : "red");
+
         if (nbrhexcolor === hexagones.length) {
+          // Désactiver le bouton de lecture en avant
           document.getElementById('movefowardS').disabled = true;
           onLive = true;
           document.getElementById('infoSpec').style.display = 'block';
