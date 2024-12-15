@@ -27,7 +27,6 @@ Le jeu de Hex se joue sur un plateau en forme de losange composé de cellules he
    - Le premier joueur qui relie ses deux côtés opposés avec une chaîne continue de pions de sa couleur remporte la partie.
    - Étant donné qu'il est impossible qu'une partie se termine sans qu'un des deux joueurs ne parvienne à relier ses côtés, il n'y a jamais de match nul dans le jeu de Hex.
 
-4. **Avantage au premier joueur** : Dans le jeu de Hex, le premier joueur peut avoir un avantage. Afin de compenser cet avantage, une règle de "swap" est parfois appliquée : après le premier coup, le deuxième joueur peut choisir de continuer en tant que joueur opposé (en inversant les couleurs et les côtés) ou de jouer normalement. Cela permet de réduire l'avantage du premier joueur.
 
 ## Fonctionnalités 
 
