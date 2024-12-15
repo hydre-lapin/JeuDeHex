@@ -1,5 +1,13 @@
 # Jeu de Hex
 
+## Étudiants sur le projet :
+Lucas Goubert
+Maxime Maurin
+
+## Lien du GitHub
+"https://github.com/hydre-lapin/JeuDeHex/"
+à noter que durant la période de mise en public du projet pour permettre une correction d'autres personnes (4) ont cloné le projet (9 décembre)
+
 ## Description
 
 Ce projet est un jeu de Hex développé en JavaScript, avec D3.js pour le rendu graphique, Express pour le serveur web, et Socket.io pour la communication en temps réel entre les joueurs. Hex est un jeu de stratégie abstrait dans lequel deux joueurs s'affrontent pour établir une chaîne ininterrompue reliant deux côtés opposés d'un plateau hexagonal.
@@ -20,6 +28,25 @@ Le jeu de Hex se joue sur un plateau en forme de losange composé de cellules he
    - Étant donné qu'il est impossible qu'une partie se termine sans qu'un des deux joueurs ne parvienne à relier ses côtés, il n'y a jamais de match nul dans le jeu de Hex.
 
 4. **Avantage au premier joueur** : Dans le jeu de Hex, le premier joueur peut avoir un avantage. Afin de compenser cet avantage, une règle de "swap" est parfois appliquée : après le premier coup, le deuxième joueur peut choisir de continuer en tant que joueur opposé (en inversant les couleurs et les côtés) ou de jouer normalement. Cela permet de réduire l'avantage du premier joueur.
+
+## Fonctionnalités 
+
+-connexion de la page web avec le serveur
+-définition automatique du mode de l'utilisateur (Joueur/Spectateur)
+-gestion des possibilités selon le mode de l'utilisateur
+-grille de jeu interactive
+-vérification automatique de victoire
+-possibilité de déconnexion, conséquences prises en compte
+-possiblité de rejouer la partie à partir de zéro (reset)
+-capacité de disposer d'un nom
+-capacité de communiquer avec les autres personnes connectées par chat écrit
+-mise en avant des coups joués et des victoires par des émissions sonores
+-possibilité d'écouter une musique et de ne plus l'écouter au fil de la partie
+-possibilité de regarder la partie en direct avec actualisation au prochain coup 
+-possibilité de revoir la partie coup par coup sans actualisation au prochain coup (spectateur)
+
+
+
 
 ## Technologies utilisées
 
