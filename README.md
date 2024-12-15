@@ -31,19 +31,19 @@ Le jeu de Hex se joue sur un plateau en forme de losange composé de cellules he
 
 ## Fonctionnalités 
 
--connexion de la page web avec le serveur
--définition automatique du mode de l'utilisateur (Joueur/Spectateur)
--gestion des possibilités selon le mode de l'utilisateur
--grille de jeu interactive
--vérification automatique de victoire
--possibilité de déconnexion, conséquences prises en compte
--possiblité de rejouer la partie à partir de zéro (reset)
--capacité de disposer d'un nom
--capacité de communiquer avec les autres personnes connectées par chat écrit
--mise en avant des coups joués et des victoires par des émissions sonores
--possibilité d'écouter une musique et de ne plus l'écouter au fil de la partie
--possibilité de regarder la partie en direct avec actualisation au prochain coup
--possibilité de revoir la partie coup par coup sans actualisation au prochain coup (spectateur)
+-connexion de la page web avec le serveur \n
+-définition automatique du mode de l'utilisateur (Joueur/Spectateur) \n
+-gestion des possibilités selon le mode de l'utilisateur \n
+-grille de jeu interactive \n
+-vérification automatique de victoire \n
+-possibilité de déconnexion, conséquences prises en compte \n
+-possiblité de rejouer la partie à partir de zéro (reset) \n
+-capacité de disposer d'un nom \n
+-capacité de communiquer avec les autres personnes connectées par chat écrit \n
+-mise en avant des coups joués et des victoires par des émissions sonores \n
+-possibilité d'écouter une musique et de ne plus l'écouter au fil de la partie \n
+-possibilité de regarder la partie en direct avec actualisation au prochain coup \n
+-possibilité de revoir la partie coup par coup sans actualisation au prochain coup (spectateur) \n
 
 
 
