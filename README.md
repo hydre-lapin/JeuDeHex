@@ -42,7 +42,7 @@ Le jeu de Hex se joue sur un plateau en forme de losange composé de cellules he
 -capacité de communiquer avec les autres personnes connectées par chat écrit
 -mise en avant des coups joués et des victoires par des émissions sonores
 -possibilité d'écouter une musique et de ne plus l'écouter au fil de la partie
--possibilité de regarder la partie en direct avec actualisation au prochain coup 
+-possibilité de regarder la partie en direct avec actualisation au prochain coup
 -possibilité de revoir la partie coup par coup sans actualisation au prochain coup (spectateur)
 
 
